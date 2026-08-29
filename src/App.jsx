@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { 
   ShieldCheck, Award, ExternalLink, PlusCircle, 
   BarChart3, Copy, Play, User, LayoutGrid, Calendar, Check,
-  Search, CheckCircle2, Flame, Info
+  Search, CheckCircle2, Flame, Info, Menu, X
 } from 'lucide-react';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [coins, setCoins] = useState(100);
-  const [activeTab, setActiveTab] = useState('daily'); // Default to Daily Testing UI
+  const [coins, setCoins] = useState(160);
+  const [activeTab, setActiveTab] = useState('daily');
   const [copiedGroup, setCopiedGroup] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Real App Testing State
+  // Apps State - Real Testing Track (Max 12 Testers needed)
   const [apps, setApps] = useState([
     {
       id: 1,
@@ -20,10 +21,11 @@ export default function App() {
       category: 'Games',
       icon: '🧟',
       group_link: 'https://groups.google.com/g/12testers-community',
-      play_link: 'https://play.google.com/store/apps/details?id=com.zomplant.war',
-      testers_count: 5,
+      play_link: 'https://play.google.com/apps/testing/com.zomplant.war',
+      testers_count: 6,
+      target_testers: 12,
       reward_coins: 20,
-      status: 'pending' // 'pending' or 'tested'
+      tested_today: false
     },
     {
       id: 2,
@@ -32,10 +34,11 @@ export default function App() {
       category: 'Casual',
       icon: '⭐',
       group_link: 'https://groups.google.com/g/12testers-community',
-      play_link: 'https://play.google.com/store/apps/details?id=com.sparkle.pop',
-      testers_count: 8,
+      play_link: 'https://play.google.com/apps/testing/com.sparkle.pop',
+      testers_count: 9,
+      target_testers: 12,
       reward_coins: 20,
-      status: 'pending'
+      tested_today: false
     },
     {
       id: 3,
@@ -44,10 +47,11 @@ export default function App() {
       category: 'Casino',
       icon: '🎰',
       group_link: 'https://groups.google.com/g/12testers-community',
-      play_link: 'https://play.google.com/store/apps/details?id=com.light.roulette',
+      play_link: 'https://play.google.com/apps/testing/com.light.roulette',
       testers_count: 7,
+      target_testers: 12,
       reward_coins: 20,
-      status: 'tested'
+      tested_today: false
     },
     {
       id: 4,
@@ -56,10 +60,11 @@ export default function App() {
       category: 'Tools',
       icon: '🌐',
       group_link: 'https://groups.google.com/g/12testers-community',
-      play_link: 'https://play.google.com/store/apps/details?id=com.qryon.app',
+      play_link: 'https://play.google.com/apps/testing/com.qryon.app',
       testers_count: 2,
+      target_testers: 12,
       reward_coins: 20,
-      status: 'tested'
+      tested_today: false
     },
     {
       id: 5,
@@ -68,87 +73,100 @@ export default function App() {
       category: 'Arcade',
       icon: '🍳',
       group_link: 'https://groups.google.com/g/12testers-community',
-      play_link: 'https://play.google.com/store/apps/details?id=com.omelette.chef',
-      testers_count: 1,
+      play_link: 'https://play.google.com/apps/testing/com.omelette.chef',
+      testers_count: 2,
+      target_testers: 12,
       reward_coins: 20,
-      status: 'pending'
+      tested_today: false
     }
   ]);
 
-  // Form State
+  // Form State for Add App
   const [appName, setAppName] = useState('');
   const [devName, setDevName] = useState('');
   const [groupLink, setGroupLink] = useState('');
   const [playLink, setPlayLink] = useState('');
 
-  // Handle Testing Action
-  const handleTestApp = (app) => {
-    window.open(app.group_link, '_blank');
-    setTimeout(() => {
-      window.open(app.play_link, '_blank');
-    }, 800);
+  // Real Test & Opt-in Logic
+  const handlePerformRealTest = (targetApp) => {
+    // 1. Google Group Link Open
+    window.open(targetApp.group_link, '_blank');
 
-    if (app.status !== 'tested') {
-      setApps(apps.map(item => item.id === app.id ? { 
-        ...item, 
-        status: 'tested', 
-        testers_count: item.testers_count + 1 
-      } : item));
-      setCoins(prev => prev + app.reward_coins);
+    // 2. Play Store Web Opt-in Link ("Become a Tester")
+    setTimeout(() => {
+      window.open(targetApp.play_link, '_blank');
+    }, 1000);
+
+    // 3. Mark as Tested Today, Increment Count & Earn Coins
+    if (!targetApp.tested_today) {
+      setApps(prevApps => prevApps.map(item => {
+        if (item.id === targetApp.id) {
+          return {
+            ...item,
+            tested_today: true,
+            testers_count: Math.min(item.target_testers, item.testers_count + 1)
+          };
+        }
+        return item;
+      }));
+
+      setCoins(prevCoins => prevCoins + targetApp.reward_coins);
     }
   };
 
-  // Handle Add App
+  // Add App Submission (-50 Coins)
   const handlePublishApp = (e) => {
     e.preventDefault();
     if (coins < 50) {
-      alert('❌ Balance kam hai! Form submit karne ke liye 50 Coins chahiye.');
+      alert('❌ Balance Insufficient! Form submit karne ke liye 50 Coins hona zaroori hain.');
       return;
     }
 
     const newApp = {
       id: Date.now(),
       name: appName,
-      developer: devName || 'Developer',
+      developer: devName || 'Independent Developer',
       category: 'Tools',
       icon: '📱',
       group_link: groupLink,
       play_link: playLink,
       testers_count: 0,
+      target_testers: 12,
       reward_coins: 20,
-      status: 'pending'
+      tested_today: true
     };
 
     setApps([newApp, ...apps]);
-    setCoins(prev => prev - 50);
+    setCoins(prevCoins => prevCoins - 50);
     setAppName('');
     setDevName('');
     setGroupLink('');
     setPlayLink('');
     setActiveTab('feed');
-    alert('🚀 App publish ho gaya! 50 Coins deduct ho gaye.');
+    alert('🚀 App Publish Ho Gaya! 50 Coins deduct ho gaye hain aur list me add kar diya gaya hai.');
   };
 
-  const testedCount = apps.filter(a => a.status === 'tested').length;
+  const completedTodayCount = apps.filter(a => a.tested_today).length;
+  const filteredApps = apps.filter(app => app.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased pb-20">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased pb-24">
       
-      {/* Header Bar */}
-      <header className="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-50 px-4 py-3 flex justify-between items-center backdrop-blur-md">
-        <div className="flex items-center gap-2">
-          <div className="bg-blue-600 p-1.5 rounded-xl text-white">
+      {/* Top Fixed Header with Glowing Coin Menu */}
+      <header className="border-b border-slate-800/80 bg-slate-900/90 sticky top-0 z-50 px-4 py-3 flex justify-between items-center backdrop-blur-md">
+        <div className="flex items-center gap-2.5">
+          <div className="bg-blue-600 p-2 rounded-xl text-white shadow-[0_0_12px_rgba(37,99,235,0.5)]">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-sm font-black tracking-tight text-white leading-none">12 TESTERS PRO</h1>
-            <span className="text-[9px] text-cyan-400 font-bold uppercase">Real Exchange Network</span>
+            <span className="text-[9px] text-cyan-400 font-bold uppercase tracking-wider">REAL EXCHANGE NETWORK</span>
           </div>
         </div>
 
-        {/* Top Balance Badge */}
-        <div className="bg-slate-950 border border-amber-500/40 px-3 py-1 rounded-2xl flex items-center gap-2 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
-          <Award className="w-4 h-4 text-amber-400" />
+        {/* Live Wallet Coin Counter */}
+        <div className="bg-slate-950 border border-amber-500/40 px-3.5 py-1.5 rounded-2xl flex items-center gap-2 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+          <Award className="w-4 h-4 text-amber-400 animate-pulse" />
           <div className="flex flex-col text-right leading-none">
             <span className="text-[8px] text-slate-400 font-semibold uppercase">BALANCE</span>
             <span className="text-xs font-black text-amber-300">{coins} Coins</span>
@@ -158,69 +176,72 @@ export default function App() {
 
       <main className="max-w-md mx-auto w-full px-4 py-4 space-y-4">
         
-        {/* COMPACT SPONSORED BANNER (Fixed Small Height) */}
-        <div className="w-full h-24 bg-slate-900/80 border border-slate-800 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden shadow-inner">
+        {/* Compact Banner Slot */}
+        <div className="w-full h-20 bg-slate-900/60 border border-slate-800/80 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden">
           <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">SPONSORED BANNER</span>
-          <div className="text-[11px] text-slate-600 font-mono mt-1">Ad Placement Banner (320x100)</div>
+          <div className="text-[10px] text-slate-600 font-mono mt-0.5">Ad Placement Banner (320x100)</div>
         </div>
 
-        {/* SCREENSHOT 2 MATCH: DAILY TESTING (14 DAYS CYCLE) */}
+        {/* TAB 1: DAILY TEST (IMAGE 1 EXACT LOOK & SYNC) */}
         {activeTab === 'daily' && (
           <div className="space-y-3">
-            {/* Top Blue Card */}
+            {/* Day 1 of 14 Card */}
             <div className="bg-gradient-to-r from-sky-400 to-blue-500 rounded-3xl p-4 text-white shadow-lg space-y-2">
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-black tracking-wide">Day 1 of 14</h3>
+                <h3 className="text-base font-black tracking-wide">Day 1 of 14</h3>
                 <div className="flex items-center gap-1 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10px] font-bold">
                   <Info className="w-3 h-3" /> +1d
                 </div>
               </div>
 
               <div className="space-y-1">
-                <div className="text-[11px] font-semibold text-blue-50">
-                  Today's Progress <span className="ml-2 font-mono">{testedCount} / {apps.length} apps</span>
+                <div className="text-[11px] font-semibold text-blue-50 flex justify-between">
+                  <span>Today's Progress</span>
+                  <span className="font-mono">{completedTodayCount} / {apps.length} apps</span>
                 </div>
                 <div className="w-full bg-white/30 rounded-full h-1.5">
                   <div 
                     className="bg-white h-full rounded-full transition-all duration-300" 
-                    style={{ width: `${(testedCount / apps.length) * 100}%` }}
+                    style={{ width: `${(completedTodayCount / apps.length) * 100}%` }}
                   ></div>
                 </div>
-                <p className="text-[10px] text-blue-100 font-medium">
-                  {apps.length - testedCount > 0 ? `Just ${apps.length - testedCount} more apps to go today` : 'Daily goal completed! 🎉'}
+                <p className="text-[10px] text-blue-100 font-medium pt-0.5">
+                  {apps.length - completedTodayCount > 0 
+                    ? `Just ${apps.length - completedTodayCount} more apps to go today` 
+                    : 'Daily goal completed! 🎉'}
                 </p>
               </div>
             </div>
 
-            {/* Apps List (Screenshot 2 Style) */}
+            {/* Daily Testing Apps List */}
             <div className="space-y-2 pt-1">
               <h4 className="text-xs font-bold text-slate-400">Daily Testing Apps</h4>
               {apps.map((app) => (
-                <div key={app.id} className="bg-slate-900 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm">
+                <div key={app.id} className="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm">
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-xl shrink-0">
                       {app.icon}
                     </div>
                     <div>
                       <h5 className="text-xs font-bold text-white">{app.name}</h5>
-                      <span className="text-[10px] text-slate-400 block font-medium">
-                        {app.status === 'tested' ? (
-                          <span className="text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded">Tested Today</span>
+                      <span className="text-[10px] block font-medium mt-0.5">
+                        {app.tested_today ? (
+                          <span className="text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md">Tested Today</span>
                         ) : (
-                          <span className="text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">Pending verification</span>
+                          <span className="text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md">Pending verification</span>
                         )}
                       </span>
                     </div>
                   </div>
 
-                  {app.status === 'tested' ? (
-                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                      <Check className="w-4 h-4" />
+                  {app.tested_today ? (
+                    <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                      <Check className="w-4 h-4 stroke-[3]" />
                     </div>
                   ) : (
                     <button 
-                      onClick={() => handleTestApp(app)}
-                      className="bg-amber-100 hover:bg-amber-200 text-amber-900 font-extrabold text-xs px-4 py-1.5 rounded-full transition shadow"
+                      onClick={() => handlePerformRealTest(app)}
+                      className="bg-amber-100 hover:bg-amber-200 text-amber-950 font-black text-xs px-4 py-1.5 rounded-full transition shadow"
                     >
                       Open
                     </button>
@@ -231,7 +252,7 @@ export default function App() {
           </div>
         )}
 
-        {/* SCREENSHOT 3 MATCH: FAIR TESTING / EARN COINS LIST */}
+        {/* TAB 2: EARN COINS (CLOSED TEST PRO - FIXED REAL TEST BUTTON LOGIC) */}
         {activeTab === 'feed' && (
           <div className="space-y-3">
             <div className="flex justify-between items-center">
@@ -239,50 +260,61 @@ export default function App() {
                 <h3 className="text-sm font-black text-white">Closed Test Pro</h3>
                 <p className="text-[10px] text-slate-400">Test 12 apps - Get 12 testers</p>
               </div>
-              <div className="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-full flex items-center gap-2 text-xs text-slate-400">
+
+              <div className="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-full flex items-center gap-2 text-xs text-slate-400 focus-within:border-cyan-500">
                 <Search className="w-3.5 h-3.5" />
-                <span className="text-[10px]">Search</span>
+                <input 
+                  type="text" 
+                  placeholder="Search" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-transparent border-none outline-none text-[10px] text-white w-16"
+                />
               </div>
             </div>
 
-            {/* Apps List (Screenshot 3 Style) */}
+            {/* Apps List (Button shows "Test" if target testers not completed) */}
             <div className="space-y-2">
-              {apps.map((app) => (
-                <div key={app.id} className="bg-slate-900 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-xl shrink-0 border border-slate-700">
-                      {app.icon}
-                    </div>
-                    <div className="min-w-0">
-                      <h5 className="text-xs font-bold text-white truncate">{app.name}</h5>
-                      <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
-                        <span className="truncate max-w-[90px]">{app.developer}</span>
-                        <span className="bg-slate-800 px-1.5 py-0.5 rounded text-[9px] font-bold text-slate-300 flex items-center gap-1">
-                          👥 {app.testers_count}
-                        </span>
+              {filteredApps.map((app) => {
+                const isFullyComplete = app.testers_count >= app.target_testers || app.tested_today;
+                
+                return (
+                  <div key={app.id} className="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-xl shrink-0 border border-slate-700">
+                        {app.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <h5 className="text-xs font-bold text-white truncate">{app.name}</h5>
+                        <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                          <span className="truncate max-w-[85px]">{app.developer}</span>
+                          <span className="bg-slate-800 px-1.5 py-0.5 rounded text-[9px] font-bold text-cyan-400 flex items-center gap-1 border border-slate-700">
+                            👥 {app.testers_count}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {app.status === 'tested' ? (
-                    <button disabled className="text-emerald-400 font-bold text-xs px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                      Tested
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => handleTestApp(app)}
-                      className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 font-bold text-xs px-4 py-1.5 rounded-full border border-cyan-500/30 transition"
-                    >
-                      Test
-                    </button>
-                  )}
-                </div>
-              ))}
+                    {isFullyComplete ? (
+                      <button disabled className="text-emerald-400 font-bold text-xs px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                        Tested
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => handlePerformRealTest(app)}
+                        className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 font-bold text-xs px-4 py-1.5 rounded-full border border-cyan-500/30 transition shadow-sm"
+                      >
+                        Test
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* TAB 3: ADD APP (SUBMISSION SYSTEM) */}
+        {/* TAB 3: ADD APP */}
         {activeTab === 'upload' && (
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-3">
             <div className="border-b border-slate-800 pb-2">
@@ -291,7 +323,7 @@ export default function App() {
             </div>
 
             <div className="bg-slate-950 p-3 rounded-2xl border border-blue-500/30 space-y-1.5">
-              <span className="text-[10px] font-bold text-cyan-400 block uppercase">Step 1: Add Google Group Email to Play Console</span>
+              <span className="text-[10px] font-bold text-cyan-400 block uppercase">Step 1: Copy Google Group Email</span>
               <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-xl text-xs font-mono">
                 <span className="truncate flex-1 text-slate-300">12testers-community@googlegroups.com</span>
                 <button 
@@ -332,10 +364,38 @@ export default function App() {
           </div>
         )}
 
+        {/* TAB 4: ANALYTICS */}
+        {activeTab === 'analytics' && (
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-4">
+            <h3 className="text-sm font-bold text-white">Testing Analytics</h3>
+            <div className="grid grid-cols-2 gap-2 text-center">
+              <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                <span className="text-[9px] text-slate-400 block font-bold uppercase">Total Testers</span>
+                <span className="text-base font-black text-white">12 / 12</span>
+              </div>
+              <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                <span className="text-[9px] text-slate-400 block font-bold uppercase">Completed Days</span>
+                <span className="text-base font-black text-cyan-400">1 / 14 Days</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: PROFILE */}
+        {activeTab === 'profile' && (
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-3">
+            <h3 className="text-sm font-bold text-white">Developer Account</h3>
+            <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-1 text-xs">
+              <p className="text-slate-400">Current Balance: <span className="text-amber-400 font-bold">{coins} Coins</span></p>
+              <p className="text-slate-400">Google Group Status: <span className="text-emerald-400 font-bold">Active Member</span></p>
+            </div>
+          </div>
+        )}
+
       </main>
 
-      {/* Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-800 z-50 px-4 py-2 flex justify-around items-center backdrop-blur-lg">
+      {/* Complete Bottom Navigation Menu Bar (5 Full Action Icons) */}
+      <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-800 z-50 px-2 py-2 flex justify-around items-center backdrop-blur-lg">
         <button 
           onClick={() => setActiveTab('feed')}
           className={`flex flex-col items-center gap-1 ${activeTab === 'feed' ? 'text-cyan-400' : 'text-slate-400'}`}
@@ -358,6 +418,22 @@ export default function App() {
         >
           <PlusCircle className="w-5 h-5" />
           <span className="text-[9px] font-bold">Add App</span>
+        </button>
+
+        <button 
+          onClick={() => setActiveTab('analytics')}
+          className={`flex flex-col items-center gap-1 ${activeTab === 'analytics' ? 'text-cyan-400' : 'text-slate-400'}`}
+        >
+          <BarChart3 className="w-5 h-5" />
+          <span className="text-[9px] font-bold">Analytics</span>
+        </button>
+
+        <button 
+          onClick={() => setActiveTab('profile')}
+          className={`flex flex-col items-center gap-1 ${activeTab === 'profile' ? 'text-cyan-400' : 'text-slate-400'}`}
+        >
+          <User className="w-5 h-5" />
+          <span className="text-[9px] font-bold">Profile</span>
         </button>
       </div>
 
