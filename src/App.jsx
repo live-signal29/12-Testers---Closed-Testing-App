@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import AdSlot from './components/AdSlot';
 import { 
   ShieldCheck, Award, ExternalLink, PlusCircle, Info, 
-  CheckCircle2, Clock, Users, Gift, Flame, Sparkles, 
-  Menu, X, LogIn, UserPlus, ArrowRight, Check, LayoutDashboard
+  Clock, Users, Sparkles, Menu, X, LogIn, UserPlus, 
+  ArrowRight, Flame, FileText, Lock, RefreshCw, Mail
 } from 'lucide-react';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authMode, setAuthMode] = useState('landing'); // 'landing', 'login', 'register'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeLegalModal, setActiveLegalModal] = useState(null); // 'privacy', 'terms', 'refund', 'contact'
   
   const [coins, setCoins] = useState(150);
   const [activeTab, setActiveTab] = useState('browse');
@@ -28,8 +29,7 @@ export default function App() {
       coins_reward: 20,
       days_completed: 8,
       total_days: 14,
-      is_featured: true,
-      verified: true
+      is_featured: true
     },
     {
       id: 2,
@@ -43,8 +43,7 @@ export default function App() {
       coins_reward: 25,
       days_completed: 12,
       total_days: 14,
-      is_featured: false,
-      verified: true
+      is_featured: false
     }
   ]);
 
@@ -72,8 +71,7 @@ export default function App() {
       coins_reward: 25,
       days_completed: 0,
       total_days: 14,
-      is_featured: false,
-      verified: true
+      is_featured: false
     };
     setApps([newAppObj, ...apps]);
     setCoins(coins - 50);
@@ -100,7 +98,6 @@ export default function App() {
       <header className="border-b border-slate-800 bg-slate-900/95 backdrop-blur sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
           
-          {/* Logo */}
           <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setAuthMode('landing')}>
             <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-600/30">
               <ShieldCheck className="w-5 h-5" />
@@ -111,7 +108,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Desktop Nav Actions */}
           <div className="hidden md:flex items-center gap-4">
             {isLoggedIn ? (
               <>
@@ -144,7 +140,6 @@ export default function App() {
             )}
           </div>
 
-          {/* Mobile Hamburger Toggle */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
             className="md:hidden p-2 text-slate-300 hover:text-white"
@@ -153,7 +148,6 @@ export default function App() {
           </button>
         </div>
 
-        {/* Mobile Slide-down Drawer */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-slate-900 border-b border-slate-800 px-4 py-4 space-y-3">
             {isLoggedIn ? (
@@ -192,7 +186,6 @@ export default function App() {
       {/* VIEW 1: LANDING PAGE */}
       {!isLoggedIn && authMode === 'landing' && (
         <div className="flex-1">
-          {/* Hero Section */}
           <section className="py-16 md:py-24 px-4 text-center max-w-4xl mx-auto space-y-6">
             <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs px-4 py-1.5 rounded-full font-bold">
               <Sparkles className="w-4 h-4" /> 100% Free Tester Exchange Platform
@@ -219,7 +212,6 @@ export default function App() {
             </div>
           </section>
 
-          {/* Features Grid */}
           <section className="max-w-5xl mx-auto px-4 py-12 border-t border-slate-800/60 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-slate-900/60 border border-slate-800 p-6 rounded-3xl space-y-2">
               <Users className="w-8 h-8 text-blue-400" />
@@ -240,7 +232,7 @@ export default function App() {
         </div>
       )}
 
-      {/* VIEW 2: AUTH MODALS (LOGIN / REGISTER) */}
+      {/* VIEW 2: AUTH MODALS */}
       {!isLoggedIn && (authMode === 'login' || authMode === 'register') && (
         <div className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl w-full max-w-md space-y-6 shadow-2xl">
@@ -285,12 +277,11 @@ export default function App() {
         </div>
       )}
 
-      {/* VIEW 3: MAIN APP DASHBOARD (AFTER LOGIN) */}
+      {/* VIEW 3: MAIN APP DASHBOARD */}
       {isLoggedIn && (
         <main className="max-w-6xl mx-auto px-4 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3 space-y-6">
             
-            {/* Tabs */}
             <div className="flex border-b border-slate-800 gap-6">
               <button 
                 onClick={() => setActiveTab('browse')}
@@ -308,7 +299,6 @@ export default function App() {
 
             <AdSlot slotId="9876543210" />
 
-            {/* Apps Listing */}
             {activeTab === 'browse' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {apps.map((app) => (
@@ -344,7 +334,6 @@ export default function App() {
                 ))}
               </div>
             ) : (
-              /* Add App Form */
               <form onSubmit={handleAddApp} className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
                 <h3 className="text-base font-bold text-white">Submit App for Closed Testing</h3>
                 <input 
@@ -369,7 +358,6 @@ export default function App() {
             )}
           </div>
 
-          {/* Sidebar */}
           <aside className="space-y-6">
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 text-xs space-y-2">
               <h4 className="font-bold text-white flex items-center gap-1"><Info className="w-4 h-4 text-blue-400" /> Community Rules</h4>
@@ -379,6 +367,78 @@ export default function App() {
           </aside>
         </main>
       )}
+
+      {/* FOOTER SECTION WITH TERMS & POLICIES */}
+      <footer className="border-t border-slate-800/80 bg-slate-900/50 py-8 px-4 mt-auto">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-400">
+          <div>
+            <p>© 2026 12 Testers Hub. All rights reserved.</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">Compliant with Google Play Console Closed Testing Guidelines.</p>
+          </div>
+          
+          <div className="flex flex-wrap gap-4 text-slate-300 font-semibold">
+            <button onClick={() => setActiveLegalModal('privacy')} className="hover:text-blue-400 transition">Privacy Policy</button>
+            <button onClick={() => setActiveLegalModal('terms')} className="hover:text-blue-400 transition">Terms of Service</button>
+            <button onClick={() => setActiveLegalModal('refund')} className="hover:text-blue-400 transition">Refund & Coin Policy</button>
+            <button onClick={() => setActiveLegalModal('contact')} className="hover:text-blue-400 transition">Contact Us</button>
+          </div>
+        </div>
+      </footer>
+
+      {/* LEGAL / POLICY POPUP MODAL */}
+      {activeLegalModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-lg w-full space-y-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <h3 className="font-bold text-white text-base capitalize flex items-center gap-2">
+                {activeLegalModal === 'privacy' && <Lock className="w-4 h-4 text-blue-400" />}
+                {activeLegalModal === 'terms' && <FileText className="w-4 h-4 text-blue-400" />}
+                {activeLegalModal === 'refund' && <RefreshCw className="w-4 h-4 text-blue-400" />}
+                {activeLegalModal === 'contact' && <Mail className="w-4 h-4 text-blue-400" />}
+                {activeLegalModal.replace('-', ' ')}
+              </h3>
+              <button onClick={() => setActiveLegalModal(null)} className="p-1 text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="text-xs text-slate-300 space-y-3 leading-relaxed">
+              {activeLegalModal === 'privacy' && (
+                <>
+                  <p>12 Testers Hub respects user privacy. We do not store sensitive personal information or track user data beyond account authentication details.</p>
+                  <p>All Google Group and Play Store links are submitted voluntarily by users for closed testing purposes.</p>
+                </>
+              )}
+              {activeLegalModal === 'terms' && (
+                <>
+                  <p>By using 12 Testers Hub, developers agree to keep opted-in apps installed for 14 continuous days as required by Google Play Console rules.</p>
+                  <p>Misuse, early opt-outs, or fake app submissions will result in temporary or permanent account suspension.</p>
+                </>
+              )}
+              {activeLegalModal === 'refund' && (
+                <>
+                  <p>Virtual coins earned or granted on this platform carry no real monetary cash value.</p>
+                  <p>Coins spent on app listings are non-refundable once an app campaign goes active on the community feed.</p>
+                </>
+              )}
+              {activeLegalModal === 'contact' && (
+                <>
+                  <p>For support, app removal inquiries, or bug reports, please email us directly:</p>
+                  <p className="font-mono text-blue-400 bg-slate-950 p-2 rounded-xl text-center">support@12testers.app</p>
+                </>
+              )}
+            </div>
+
+            <button 
+              onClick={() => setActiveLegalModal(null)}
+              className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-xl text-xs mt-2"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
