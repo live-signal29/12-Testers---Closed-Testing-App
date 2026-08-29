@@ -1,20 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { 
   ShieldCheck, Award, PlusCircle, 
   BarChart3, User, LayoutGrid, Calendar, Check,
   Search, Info, ArrowRight, Menu, X, Users, Smartphone, Zap,
-  Clock, Shield
+  Clock, Shield, Mail, Lock, AlertCircle, CheckCircle2
 } from 'lucide-react';
 
-export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState('register'); // 'register' or 'login'
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [policyModal, setPolicyModal] = useState(null); // 'privacy', 'terms', 'refund'
+// ------------------------------------------------------------------
+// 1. SUPABASE CLIENT INITIALIZATION
+// (Apni URL aur Anon Key yahan replace karein)
+// ------------------------------------------------------------------
+const SUPABASE_URL = "https://your-project-id.supabase.co"; 
+const SUPABASE_ANON_KEY = "your-anon-key-here";
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  
+  // Modes: 'login' | 'register' | 'forgot'
+  const [authMode, setAuthMode] = useState('register'); 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [policyModal, setPolicyModal] = useState(null);
+
+  // Auth Inputs & States
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [authSuccess, setAuthSuccess] = useState('');
+
+  // App States
   const [coins, setCoins] = useState(160);
   const [activeTab, setActiveTab] = useState('daily');
   const [copiedGroup, setCopiedGroup] = useState(false);
@@ -24,8 +41,7 @@ export default function App() {
     { id: 1, name: 'Zomplant War', developer: 'Game Studio PK', category: 'Games', icon: '🧟', group_link: 'https://groups.google.com/g/12testers-community', play_link: 'https://play.google.com/apps/testing/com.zomplant.war', testers_count: 6, target_testers: 12, reward_coins: 20, tested_today: false },
     { id: 2, name: 'Sparkle Pop', developer: 'Star Puzzle', category: 'Casual', icon: '⭐', group_link: 'https://groups.google.com/g/12testers-community', play_link: 'https://play.google.com/apps/testing/com.sparkle.pop', testers_count: 9, target_testers: 12, reward_coins: 20, tested_today: false },
     { id: 3, name: 'Light roulette', developer: 'cenusalabs', category: 'Casino', icon: '🎰', group_link: 'https://groups.google.com/g/12testers-community', play_link: 'https://play.google.com/apps/testing/com.light.roulette', testers_count: 7, target_testers: 12, reward_coins: 20, tested_today: false },
-    { id: 4, name: 'Qryon', developer: 'AsarSong studio', category: 'Tools', icon: '🌐', group_link: 'https://groups.google.com/g/12testers-community', play_link: 'https://play.google.com/apps/testing/com.qryon.app', testers_count: 2, target_testers: 12, reward_coins: 20, tested_today: false },
-    { id: 5, name: 'Omelette Chef Kitchen', developer: 'Masarp Studio', category: 'Arcade', icon: '🍳', group_link: 'https://groups.google.com/g/12testers-community', play_link: 'https://play.google.com/apps/testing/com.omelette.chef', testers_count: 2, target_testers: 12, reward_coins: 20, tested_today: false }
+    { id: 4, name: 'Qryon', developer: 'AsarSong studio', category: 'Tools', icon: '🌐', group_link: 'https://groups.google.com/g/12testers-community', play_link: 'https://play.google.com/apps/testing/com.qryon.app', testers_count: 2, target_testers: 12, reward_coins: 20, tested_today: false }
   ]);
 
   const [appName, setAppName] = useState('');
@@ -33,12 +49,73 @@ export default function App() {
   const [groupLink, setGroupLink] = useState('');
   const [playLink, setPlayLink] = useState('');
 
-  const handleAuthSubmit = (e) => {
+  // ------------------------------------------------------------------
+  // 2. CHECK REAL USER SESSION ON LOAD
+  // ------------------------------------------------------------------
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Mode change switch
+  const handleSwitchMode = (mode) => {
+    setAuthMode(mode);
+    setAuthError('');
+    setAuthSuccess('');
+  };
+
+  // ------------------------------------------------------------------
+  // 3. REAL SUPABASE AUTHENTICATION LOGIC (Login, Register, Reset)
+  // ------------------------------------------------------------------
+  const handleAuthSubmit = async (e) => {
     e.preventDefault();
-    if (email && password) {
-      setIsLoggedIn(true);
-      setShowAuthModal(false);
+    setAuthLoading(true);
+    setAuthError('');
+    setAuthSuccess('');
+
+    try {
+      if (authMode === 'login') {
+        // REAL LOGIN
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        if (error) throw error;
+        setShowAuthModal(false);
+      } else if (authMode === 'register') {
+        // REAL SIGNUP
+        const { error } = await supabase.auth.signUp({
+          email,
+          password
+        });
+        if (error) throw error;
+        setAuthSuccess('Account created! Please check your email to confirm registration.');
+      } else if (authMode === 'forgot') {
+        // REAL FORGOT PASSWORD (EMAIL RESET LINK)
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin
+        });
+        if (error) throw error;
+        setAuthSuccess('Password reset link sent to your email!');
+      }
+    } catch (err) {
+      setAuthError(err.message || 'Authentication failed');
+    } finally {
+      setAuthLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setMobileMenuOpen(false);
   };
 
   const handlePerformRealTest = (targetApp) => {
@@ -73,9 +150,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col font-sans antialiased select-none">
       
-      {/* 1. TOP NAVBAR */}
+      {/* HEADER */}
       <header className="border-b border-slate-800/80 bg-[#070b14]/90 sticky top-0 z-40 px-4 py-3 flex justify-between items-center backdrop-blur-md">
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsLoggedIn(false)}>
+        <div className="flex items-center gap-2 cursor-pointer">
           <div className="bg-blue-600 p-2 rounded-xl text-white shadow-[0_0_12px_rgba(37,99,235,0.5)]">
             <ShieldCheck className="w-5 h-5" />
           </div>
@@ -86,7 +163,7 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2">
-          {isLoggedIn && (
+          {user && (
             <div className="bg-slate-950 border border-amber-500/40 px-3 py-1 rounded-2xl flex items-center gap-2 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
               <Award className="w-4 h-4 text-amber-400 animate-pulse" />
               <div className="flex flex-col text-right leading-none">
@@ -105,20 +182,20 @@ export default function App() {
         </div>
       </header>
 
-      {/* THREE LINES MOBILE MENU DRAWER */}
+      {/* MOBILE DRAWER */}
       {mobileMenuOpen && (
         <div className="bg-slate-900 border-b border-slate-800 px-4 py-4 space-y-3 text-xs font-semibold sticky top-[53px] z-30 shadow-2xl backdrop-blur-md">
-          {!isLoggedIn ? (
+          {!user ? (
             <>
               <button 
-                onClick={() => { setAuthMode('login'); setShowAuthModal(true); setMobileMenuOpen(false); }}
+                onClick={() => { handleSwitchMode('login'); setShowAuthModal(true); setMobileMenuOpen(false); }}
                 className="w-full text-left py-2.5 px-3 bg-slate-950 rounded-xl text-slate-200 hover:text-cyan-400 border border-slate-800 flex justify-between items-center"
               >
                 <span>Existing Member Login</span>
                 <ArrowRight className="w-4 h-4 text-slate-500" />
               </button>
               <button 
-                onClick={() => { setAuthMode('register'); setShowAuthModal(true); setMobileMenuOpen(false); }}
+                onClick={() => { handleSwitchMode('register'); setShowAuthModal(true); setMobileMenuOpen(false); }}
                 className="w-full text-left py-2.5 px-3 bg-blue-600 rounded-xl text-white font-bold flex justify-between items-center shadow-md"
               >
                 <span>Register & Get 12 Testers</span>
@@ -127,7 +204,7 @@ export default function App() {
             </>
           ) : (
             <button 
-              onClick={() => { setIsLoggedIn(false); setMobileMenuOpen(false); }}
+              onClick={handleLogout}
               className="w-full text-left py-2.5 px-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl font-bold flex justify-between items-center"
             >
               <span>Logout Account</span>
@@ -137,16 +214,16 @@ export default function App() {
 
           <div className="pt-2 border-t border-slate-800 flex flex-col gap-2 text-[11px] text-slate-400">
             <button onClick={() => { setPolicyModal('privacy'); setMobileMenuOpen(false); }} className="text-left hover:text-white">Privacy Policy</button>
-            <button onClick={() => { setPolicyModal('terms'); setMobileMenuOpen(false); }} className="text-left hover:text-white font-mono">Terms & Conditions</button>
+            <button onClick={() => { setPolicyModal('terms'); setMobileMenuOpen(false); }} className="text-left hover:text-white">Terms & Conditions</button>
             <button onClick={() => { setPolicyModal('refund'); setMobileMenuOpen(false); }} className="text-left hover:text-white">Refund Policy</button>
           </div>
         </div>
       )}
 
-      {/* 2. BODY CONTENT */}
+      {/* MAIN BODY */}
       <main className="max-w-md mx-auto w-full px-4 py-6 space-y-6 flex-1 pb-24">
-        {!isLoggedIn ? (
-          /* HOMEPAGE / LANDING PAGE */
+        {!user ? (
+          /* UNAUTHENTICATED LANDING PAGE */
           <div className="space-y-8 pt-2">
             <div className="text-center space-y-4">
               <div className="inline-flex items-center gap-2 bg-blue-950/60 border border-blue-500/30 px-3.5 py-1.5 rounded-full text-[11px] font-bold text-cyan-400">
@@ -164,7 +241,7 @@ export default function App() {
 
               <div className="space-y-3 pt-2">
                 <button 
-                  onClick={() => { setAuthMode('register'); setShowAuthModal(true); }}
+                  onClick={() => { handleSwitchMode('register'); setShowAuthModal(true); }}
                   className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(37,99,235,0.4)] transition"
                 >
                   <span>Register & Get 12 Testers</span>
@@ -172,7 +249,7 @@ export default function App() {
                 </button>
 
                 <button 
-                  onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
+                  onClick={() => { handleSwitchMode('login'); setShowAuthModal(true); }}
                   className="w-full bg-slate-900/90 hover:bg-slate-800 text-slate-200 font-bold text-xs py-3.5 px-4 rounded-2xl border border-slate-800 transition"
                 >
                   Existing Member Login
@@ -180,7 +257,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* FULL FEATURES GRID */}
             <div className="space-y-3 pt-4 border-t border-slate-900">
               <h3 className="text-xs font-black uppercase text-slate-500 tracking-wider text-center mb-4">Why Developers Choose Us</h3>
               
@@ -190,36 +266,17 @@ export default function App() {
                   <h4 className="text-xs font-bold text-white">Guaranteed Testers</h4>
                   <p className="text-[10px] text-slate-400">Real developers testing your app daily.</p>
                 </div>
-                
                 <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-2xl space-y-1">
                   <Smartphone className="w-5 h-5 text-cyan-400 mb-1" />
                   <h4 className="text-xs font-bold text-white">Play Console Ready</h4>
                   <p className="text-[10px] text-slate-400">Full 14-day tracking & testing history.</p>
                 </div>
-
-                <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-2xl space-y-1">
-                  <Clock className="w-5 h-5 text-amber-400 mb-1" />
-                  <h4 className="text-xs font-bold text-white">Continuous 14 Days</h4>
-                  <p className="text-[10px] text-slate-400">Automated daily test reminders & verification.</p>
-                </div>
-
-                <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-2xl space-y-1">
-                  <Shield className="w-5 h-5 text-emerald-400 mb-1" />
-                  <h4 className="text-xs font-bold text-white">100% Safe Exchange</h4>
-                  <p className="text-[10px] text-slate-400">Google Group opt-in compliance guaranteed.</p>
-                </div>
               </div>
             </div>
           </div>
         ) : (
-          /* LOGGED IN APP DASHBOARD */
+          /* AUTHENTICATED DASHBOARD */
           <div className="space-y-4">
-            <div className="w-full h-20 bg-slate-900/60 border border-slate-800/80 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden">
-              <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">SPONSORED BANNER</span>
-              <div className="text-[10px] text-slate-600 font-mono mt-0.5">Ad Placement Banner (320x100)</div>
-            </div>
-
-            {/* TAB: DAILY TEST */}
             {activeTab === 'daily' && (
               <div className="space-y-3">
                 <div className="bg-gradient-to-r from-sky-400 to-blue-500 rounded-3xl p-4 text-white shadow-lg space-y-2">
@@ -268,107 +325,13 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB: EARN COINS */}
-            {activeTab === 'feed' && (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-sm font-black text-white">Closed Test Pro</h3>
-                    <p className="text-[10px] text-slate-400">Test 12 apps - Get 12 testers</p>
-                  </div>
-                  <div className="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-full flex items-center gap-2 text-xs text-slate-400">
-                    <Search className="w-3.5 h-3.5" />
-                    <input type="text" placeholder="Search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent border-none outline-none text-[10px] text-white w-16" />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  {filteredApps.map((app) => (
-                    <div key={app.id} className="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-xl shrink-0 border border-slate-700">{app.icon}</div>
-                        <div className="min-w-0">
-                          <h5 className="text-xs font-bold text-white truncate">{app.name}</h5>
-                          <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
-                            <span className="truncate max-w-[85px]">{app.developer}</span>
-                            <span className="bg-slate-800 px-1.5 py-0.5 rounded text-[9px] font-bold text-cyan-400 border border-slate-700">👥 {app.testers_count}</span>
-                          </div>
-                        </div>
-                      </div>
-                      {app.tested_today ? (
-                        <button disabled className="text-emerald-400 font-bold text-xs px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">Tested</button>
-                      ) : (
-                        <button onClick={() => handlePerformRealTest(app)} className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 font-bold text-xs px-4 py-1.5 rounded-full border border-cyan-500/30 transition shadow-sm">Test</button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* TAB: ADD APP */}
-            {activeTab === 'upload' && (
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-3">
-                <div className="border-b border-slate-800 pb-2">
-                  <h3 className="text-sm font-bold text-white">Add App for 12 Testers</h3>
-                  <p className="text-[11px] text-slate-400">Listing Cost: <span className="text-amber-400 font-bold">50 Coins</span></p>
-                </div>
-                <div className="bg-slate-950 p-3 rounded-2xl border border-blue-500/30 space-y-1.5">
-                  <span className="text-[10px] font-bold text-cyan-400 block uppercase">Step 1: Copy Google Group Email</span>
-                  <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-xl text-xs font-mono">
-                    <span className="truncate flex-1 text-slate-300">12testers-community@googlegroups.com</span>
-                    <button onClick={() => { navigator.clipboard.writeText('12testers-community@googlegroups.com'); setCopiedGroup(true); setTimeout(() => setCopiedGroup(false), 2000); }} className="bg-blue-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold">
-                      {copiedGroup ? 'Copied' : 'Copy'}
-                    </button>
-                  </div>
-                </div>
-                <form onSubmit={handlePublishApp} className="space-y-2.5">
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-300">App Name</label>
-                    <input type="text" required placeholder="e.g. My App" value={appName} onChange={(e) => setAppName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-100 mt-1 outline-none" />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-300">Developer Name</label>
-                    <input type="text" required placeholder="e.g. Studio Name" value={devName} onChange={(e) => setDevName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-100 mt-1 outline-none" />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-300">Google Group Link</label>
-                    <input type="url" required placeholder="https://groups.google.com/g/..." value={groupLink} onChange={(e) => setGroupLink(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-100 mt-1 outline-none" />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-300">Play Store Opt-in Link</label>
-                    <input type="url" required placeholder="https://play.google.com/apps/testing/..." value={playLink} onChange={(e) => setPlayLink(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-100 mt-1 outline-none" />
-                  </div>
-                  <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs mt-2 transition">Publish App (-50 Coins)</button>
-                </form>
-              </div>
-            )}
-
-            {/* TAB: ANALYTICS */}
-            {activeTab === 'analytics' && (
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-4">
-                <h3 className="text-sm font-bold text-white">Testing Analytics</h3>
-                <div className="grid grid-cols-2 gap-2 text-center">
-                  <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800">
-                    <span className="text-[9px] text-slate-400 block font-bold uppercase">Total Testers</span>
-                    <span className="text-base font-black text-white">12 / 12</span>
-                  </div>
-                  <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800">
-                    <span className="text-[9px] text-slate-400 block font-bold uppercase">Completed Days</span>
-                    <span className="text-base font-black text-cyan-400">1 / 14 Days</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB: PROFILE */}
             {activeTab === 'profile' && (
               <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-3">
                 <h3 className="text-sm font-bold text-white">Developer Account</h3>
                 <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-1 text-xs">
-                  <p className="text-slate-400">Email: <span className="text-white font-bold">{email || 'dev@example.com'}</span></p>
-                  <p className="text-slate-400">Current Balance: <span className="text-amber-400 font-bold">{coins} Coins</span></p>
-                  <button onClick={() => setIsLoggedIn(false)} className="mt-3 w-full bg-red-600/20 text-red-400 border border-red-500/30 py-2 rounded-xl text-xs font-bold">Logout Account</button>
+                  <p className="text-slate-400">Logged in Email: <span className="text-white font-bold">{user.email}</span></p>
+                  <p className="text-slate-400">Balance: <span className="text-amber-400 font-bold">{coins} Coins</span></p>
+                  <button onClick={handleLogout} className="mt-3 w-full bg-red-600/20 text-red-400 border border-red-500/30 py-2 rounded-xl text-xs font-bold">Logout Account</button>
                 </div>
               </div>
             )}
@@ -376,87 +339,140 @@ export default function App() {
         )}
       </main>
 
-      {/* 3. POLICY FOOTER */}
-      <footer className="border-t border-slate-900 bg-[#05080f] py-6 px-4 text-center space-y-3 text-xs text-slate-500 mb-12">
-        <div className="flex justify-center items-center gap-4 text-[11px] font-semibold text-slate-400">
-          <button onClick={() => setPolicyModal('privacy')} className="hover:text-blue-400 transition">Privacy Policy</button>
-          <span>•</span>
-          <button onClick={() => setPolicyModal('terms')} className="hover:text-blue-400 transition">Terms of Service</button>
-          <span>•</span>
-          <button onClick={() => setPolicyModal('refund')} className="hover:text-blue-400 transition">Refund Policy</button>
-        </div>
-        <p className="text-[10px] text-slate-600">© 2026 12 Testers Hub. Designed for Google Play Console Testers.</p>
-      </footer>
-
-      {/* 4. AUTH MODAL */}
+      {/* 4. REAL SUPABASE AUTH MODAL (WITH FORGOT PASSWORD & WORKING TOGGLES) */}
       {showAuthModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl relative">
-            <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white p-1"><X className="w-5 h-5" /></button>
+            <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+              <X className="w-5 h-5" />
+            </button>
+            
             <div className="text-center space-y-1">
-              <h2 className="text-lg font-black text-white">{authMode === 'login' ? 'Existing Member Login' : 'Create Account'}</h2>
-              <p className="text-xs text-slate-400">Pass Closed Testing in 14 Days</p>
+              <h2 className="text-lg font-black text-white">
+                {authMode === 'login' && 'Existing Member Login'}
+                {authMode === 'register' && 'Create Account'}
+                {authMode === 'forgot' && 'Reset Password'}
+              </h2>
+              <p className="text-xs text-slate-400">
+                {authMode === 'login' && 'Enter your registered credentials'}
+                {authMode === 'register' && 'Pass Closed Testing in 14 Days'}
+                {authMode === 'forgot' && 'We will send a reset link to your email'}
+              </p>
             </div>
+
+            {/* ERROR DISPLAY */}
+            {authError && (
+              <div className="bg-red-500/10 border border-red-500/30 p-2.5 rounded-xl flex items-center gap-2 text-red-400 text-xs">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            {/* SUCCESS DISPLAY */}
+            {authSuccess && (
+              <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-xl flex items-center gap-2 text-emerald-400 text-xs">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{authSuccess}</span>
+              </div>
+            )}
+
             <form onSubmit={handleAuthSubmit} className="space-y-3">
               <div>
                 <label className="text-[11px] font-bold text-slate-300">Email Address</label>
-                <input type="email" required placeholder="dev@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 mt-1 outline-none focus:border-blue-500" />
+                <div className="relative mt-1">
+                  <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+                  <input 
+                    type="email" 
+                    required 
+                    placeholder="dev@example.com" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-100 outline-none focus:border-blue-500" 
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-[11px] font-bold text-slate-300">Password</label>
-                <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 mt-1 outline-none focus:border-blue-500" />
-              </div>
-              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg transition">
-                {authMode === 'login' ? 'Login to Dashboard' : 'Register & Claim 160 Coins'}
+
+              {authMode !== 'forgot' && (
+                <div>
+                  <div className="flex justify-between items-center">
+                    <label className="text-[11px] font-bold text-slate-300">Password</label>
+                    {authMode === 'login' && (
+                      <button 
+                        type="button" 
+                        onClick={() => handleSwitchMode('forgot')} 
+                        className="text-[10px] text-cyan-400 hover:underline"
+                      >
+                        Forgot Password?
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative mt-1">
+                    <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+                    <input 
+                      type="password" 
+                      required 
+                      placeholder="••••••••" 
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)} 
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-100 outline-none focus:border-blue-500" 
+                    />
+                  </div>
+                </div>
+              )}
+
+              <button 
+                type="submit" 
+                disabled={authLoading} 
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg transition disabled:opacity-50"
+              >
+                {authLoading ? 'Verifying with Database...' : (
+                  authMode === 'login' ? 'Login to Dashboard' : 
+                  authMode === 'register' ? 'Register & Claim 160 Coins' : 
+                  'Send Reset Email'
+                )}
               </button>
             </form>
+
+            {/* NAVIGATION TOGGLES */}
             <div className="text-center border-t border-slate-800 pt-3">
-              <button onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} className="text-xs text-cyan-400 hover:underline font-semibold">
-                {authMode === 'login' ? "Don't have an account? Register" : 'Already have an account? Login'}
-              </button>
+              {authMode === 'login' && (
+                <button onClick={() => handleSwitchMode('register')} className="text-xs text-cyan-400 hover:underline font-semibold">
+                  Don't have an account? Register
+                </button>
+              )}
+              {authMode === 'register' && (
+                <button onClick={() => handleSwitchMode('login')} className="text-xs text-cyan-400 hover:underline font-semibold">
+                  Already have an account? Login
+                </button>
+              )}
+              {authMode === 'forgot' && (
+                <button onClick={() => handleSwitchMode('login')} className="text-xs text-cyan-400 hover:underline font-semibold">
+                  Back to Login
+                </button>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* 5. POLICY MODAL */}
-      {policyModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-3 max-h-[80vh] overflow-y-auto relative text-xs">
-            <button onClick={() => setPolicyModal(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
-            <h3 className="text-sm font-bold text-white uppercase border-b border-slate-800 pb-2">
-              {policyModal === 'privacy' && 'Privacy Policy'}
-              {policyModal === 'terms' && 'Terms of Service'}
-              {policyModal === 'refund' && 'Refund Policy'}
-            </h3>
-            <div className="text-slate-400 space-y-2 leading-relaxed">
-              {policyModal === 'privacy' && <p>We respect your privacy. All user emails and Play Store opt-in credentials provided to 12 Testers are strictly used for Android app verification and reciprocal testing purposes only.</p>}
-              {policyModal === 'terms' && <p>By using 12 Testers, you agree to keep tested apps installed on your device for at least 14 days and submit honest feedback as required by Google Play Console policies.</p>}
-              {policyModal === 'refund' && <p>Coins earned through reciprocal app testing are virtual assets used solely to list apps within the platform ecosystem and hold zero real-world cash refund value.</p>}
-            </div>
-            <button onClick={() => setPolicyModal(null)} className="w-full bg-slate-800 text-white font-bold py-2 rounded-xl text-xs mt-3">Close</button>
-          </div>
+      {/* FOOTER */}
+      <footer className="border-t border-slate-900 bg-[#05080f] py-6 px-4 text-center space-y-3 text-xs text-slate-500 mb-12">
+        <div className="flex justify-center items-center gap-4 text-[11px] font-semibold text-slate-400">
+          <button onClick={() => setPolicyModal('privacy')} className="hover:text-blue-400">Privacy Policy</button>
+          <span>•</span>
+          <button onClick={() => setPolicyModal('terms')} className="hover:text-blue-400">Terms of Service</button>
+          <span>•</span>
+          <button onClick={() => setPolicyModal('refund')} className="hover:text-blue-400">Refund Policy</button>
         </div>
-      )}
+        <p className="text-[10px] text-slate-600">© 2026 12 Testers Hub.</p>
+      </footer>
 
-      {/* 6. BOTTOM NAV (LOGGED IN ONLY) */}
-      {isLoggedIn && (
+      {/* BOTTOM NAV */}
+      {user && (
         <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-800 z-40 px-2 py-2 flex justify-around items-center backdrop-blur-lg">
-          <button onClick={() => setActiveTab('feed')} className={`flex flex-col items-center gap-1 ${activeTab === 'feed' ? 'text-cyan-400' : 'text-slate-400'}`}>
-            <LayoutGrid className="w-5 h-5" />
-            <span className="text-[9px] font-bold">Earn Coins</span>
-          </button>
           <button onClick={() => setActiveTab('daily')} className={`flex flex-col items-center gap-1 ${activeTab === 'daily' ? 'text-cyan-400' : 'text-slate-400'}`}>
             <Calendar className="w-5 h-5" />
             <span className="text-[9px] font-bold">Daily Test</span>
-          </button>
-          <button onClick={() => setActiveTab('upload')} className={`flex flex-col items-center gap-1 ${activeTab === 'upload' ? 'text-cyan-400' : 'text-slate-400'}`}>
-            <PlusCircle className="w-5 h-5" />
-            <span className="text-[9px] font-bold">Add App</span>
-          </button>
-          <button onClick={() => setActiveTab('analytics')} className={`flex flex-col items-center gap-1 ${activeTab === 'analytics' ? 'text-cyan-400' : 'text-slate-400'}`}>
-            <BarChart3 className="w-5 h-5" />
-            <span className="text-[9px] font-bold">Analytics</span>
           </button>
           <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center gap-1 ${activeTab === 'profile' ? 'text-cyan-400' : 'text-slate-400'}`}>
             <User className="w-5 h-5" />
