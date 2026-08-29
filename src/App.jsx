@@ -3,7 +3,7 @@ import {
   ShieldCheck, Award, PlusCircle, 
   BarChart3, User, LayoutGrid, Calendar, Check,
   Search, Info, ArrowRight, Menu, X, Users, Smartphone, Zap,
-  Clock, Shield, RefreshCw, FileText, Lock, Globe, ExternalLink
+  Clock, Shield
 } from 'lucide-react';
 
 export default function App() {
@@ -11,94 +11,28 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState('register'); // 'register' or 'login'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Policy Modals State
   const [policyModal, setPolicyModal] = useState(null); // 'privacy', 'terms', 'refund'
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
   const [coins, setCoins] = useState(160);
   const [activeTab, setActiveTab] = useState('daily');
   const [copiedGroup, setCopiedGroup] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Apps State
   const [apps, setApps] = useState([
-    {
-      id: 1,
-      name: 'Zomplant War',
-      developer: 'Game Studio PK',
-      category: 'Games',
-      icon: '🧟',
-      group_link: 'https://groups.google.com/g/12testers-community',
-      play_link: 'https://play.google.com/apps/testing/com.zomplant.war',
-      testers_count: 6,
-      target_testers: 12,
-      reward_coins: 20,
-      tested_today: false
-    },
-    {
-      id: 2,
-      name: 'Sparkle Pop',
-      developer: 'Star Puzzle',
-      category: 'Casual',
-      icon: '⭐',
-      group_link: 'https://groups.google.com/g/12testers-community',
-      play_link: 'https://play.google.com/apps/testing/com.sparkle.pop',
-      testers_count: 9,
-      target_testers: 12,
-      reward_coins: 20,
-      tested_today: false
-    },
-    {
-      id: 3,
-      name: 'Light roulette',
-      developer: 'cenusalabs',
-      category: 'Casino',
-      icon: '🎰',
-      group_link: 'https://groups.google.com/g/12testers-community',
-      play_link: 'https://play.google.com/apps/testing/com.light.roulette',
-      testers_count: 7,
-      target_testers: 12,
-      reward_coins: 20,
-      tested_today: false
-    },
-    {
-      id: 4,
-      name: 'Qryon',
-      developer: 'AsarSong studio',
-      category: 'Tools',
-      icon: '🌐',
-      group_link: 'https://groups.google.com/g/12testers-community',
-      play_link: 'https://play.google.com/apps/testing/com.qryon.app',
-      testers_count: 2,
-      target_testers: 12,
-      reward_coins: 20,
-      tested_today: false
-    },
-    {
-      id: 5,
-      name: 'Omelette Chef Kitchen',
-      developer: 'Masarp Studio',
-      category: 'Arcade',
-      icon: '🍳',
-      group_link: 'https://groups.google.com/g/12testers-community',
-      play_link: 'https://play.google.com/apps/testing/com.omelette.chef',
-      testers_count: 2,
-      target_testers: 12,
-      reward_coins: 20,
-      tested_today: false
-    }
+    { id: 1, name: 'Zomplant War', developer: 'Game Studio PK', category: 'Games', icon: '🧟', group_link: 'https://groups.google.com/g/12testers-community', play_link: 'https://play.google.com/apps/testing/com.zomplant.war', testers_count: 6, target_testers: 12, reward_coins: 20, tested_today: false },
+    { id: 2, name: 'Sparkle Pop', developer: 'Star Puzzle', category: 'Casual', icon: '⭐', group_link: 'https://groups.google.com/g/12testers-community', play_link: 'https://play.google.com/apps/testing/com.sparkle.pop', testers_count: 9, target_testers: 12, reward_coins: 20, tested_today: false },
+    { id: 3, name: 'Light roulette', developer: 'cenusalabs', category: 'Casino', icon: '🎰', group_link: 'https://groups.google.com/g/12testers-community', play_link: 'https://play.google.com/apps/testing/com.light.roulette', testers_count: 7, target_testers: 12, reward_coins: 20, tested_today: false },
+    { id: 4, name: 'Qryon', developer: 'AsarSong studio', category: 'Tools', icon: '🌐', group_link: 'https://groups.google.com/g/12testers-community', play_link: 'https://play.google.com/apps/testing/com.qryon.app', testers_count: 2, target_testers: 12, reward_coins: 20, tested_today: false },
+    { id: 5, name: 'Omelette Chef Kitchen', developer: 'Masarp Studio', category: 'Arcade', icon: '🍳', group_link: 'https://groups.google.com/g/12testers-community', play_link: 'https://play.google.com/apps/testing/com.omelette.chef', testers_count: 2, target_testers: 12, reward_coins: 20, tested_today: false }
   ]);
 
-  // Form State for Add App
   const [appName, setAppName] = useState('');
   const [devName, setDevName] = useState('');
   const [groupLink, setGroupLink] = useState('');
   const [playLink, setPlayLink] = useState('');
 
-  // Auth Submit
   const handleAuthSubmit = (e) => {
     e.preventDefault();
     if (email && password) {
@@ -107,7 +41,6 @@ export default function App() {
     }
   };
 
-  // Real Test & Sync Logic
   const handlePerformRealTest = (targetApp) => {
     window.open(targetApp.group_link, '_blank');
     setTimeout(() => {
@@ -115,48 +48,21 @@ export default function App() {
     }, 1000);
 
     if (!targetApp.tested_today) {
-      setApps(prevApps => prevApps.map(item => {
-        if (item.id === targetApp.id) {
-          return {
-            ...item,
-            tested_today: true,
-            testers_count: Math.min(item.target_testers, item.testers_count + 1)
-          };
-        }
-        return item;
-      }));
+      setApps(prevApps => prevApps.map(item => item.id === targetApp.id ? { ...item, tested_today: true, testers_count: Math.min(item.target_testers, item.testers_count + 1) } : item));
       setCoins(prevCoins => prevCoins + targetApp.reward_coins);
     }
   };
 
-  // Add App Submission
   const handlePublishApp = (e) => {
     e.preventDefault();
     if (coins < 50) {
       alert('❌ Balance Insufficient! Form submit karne ke liye 50 Coins hona zaroori hain.');
       return;
     }
-
-    const newApp = {
-      id: Date.now(),
-      name: appName,
-      developer: devName || 'Independent Developer',
-      category: 'Tools',
-      icon: '📱',
-      group_link: groupLink,
-      play_link: playLink,
-      testers_count: 0,
-      target_testers: 12,
-      reward_coins: 20,
-      tested_today: true
-    };
-
+    const newApp = { id: Date.now(), name: appName, developer: devName || 'Independent Developer', category: 'Tools', icon: '📱', group_link: groupLink, play_link: playLink, testers_count: 0, target_testers: 12, reward_coins: 20, tested_today: true };
     setApps([newApp, ...apps]);
     setCoins(prevCoins => prevCoins - 50);
-    setAppName('');
-    setDevName('');
-    setGroupLink('');
-    setPlayLink('');
+    setAppName(''); setDevName(''); setGroupLink(''); setPlayLink('');
     setActiveTab('feed');
     alert('🚀 App Publish Ho Gaya! 50 Coins deduct ho gaye hain.');
   };
@@ -165,11 +71,11 @@ export default function App() {
   const filteredApps = apps.filter(app => app.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col font-sans antialiased">
+    <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col font-sans antialiased select-none">
       
-      {/* 1. TOP HEADER MENU BAR */}
-      <header className="border-b border-slate-800/80 bg-[#070b14]/90 sticky top-0 z-40 px-4 py-3.5 flex justify-between items-center backdrop-blur-md">
-        <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setIsLoggedIn(false)}>
+      {/* 1. TOP NAVBAR */}
+      <header className="border-b border-slate-800/80 bg-[#070b14]/90 sticky top-0 z-40 px-4 py-3 flex justify-between items-center backdrop-blur-md">
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsLoggedIn(false)}>
           <div className="bg-blue-600 p-2 rounded-xl text-white shadow-[0_0_12px_rgba(37,99,235,0.5)]">
             <ShieldCheck className="w-5 h-5" />
           </div>
@@ -179,10 +85,9 @@ export default function App() {
           </div>
         </div>
 
-        {/* Dynamic Header Controls */}
         <div className="flex items-center gap-2">
           {isLoggedIn && (
-            <div className="bg-slate-950 border border-amber-500/40 px-3 py-1.5 rounded-2xl flex items-center gap-2 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+            <div className="bg-slate-950 border border-amber-500/40 px-3 py-1 rounded-2xl flex items-center gap-2 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
               <Award className="w-4 h-4 text-amber-400 animate-pulse" />
               <div className="flex flex-col text-right leading-none">
                 <span className="text-[8px] text-slate-400 font-semibold uppercase">BALANCE</span>
@@ -191,7 +96,6 @@ export default function App() {
             </div>
           )}
           
-          {/* THREE LINES HAMBURGER MENU */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
             className="p-2 text-slate-300 hover:text-white bg-slate-900 border border-slate-800 rounded-xl transition"
@@ -201,9 +105,9 @@ export default function App() {
         </div>
       </header>
 
-      {/* THREE LINES SLIDE-DOWN DRAWER MENU */}
+      {/* THREE LINES MOBILE MENU DRAWER */}
       {mobileMenuOpen && (
-        <div className="bg-slate-900 border-b border-slate-800 px-4 py-4 space-y-3 text-xs font-semibold sticky top-[57px] z-30 shadow-2xl backdrop-blur-md">
+        <div className="bg-slate-900 border-b border-slate-800 px-4 py-4 space-y-3 text-xs font-semibold sticky top-[53px] z-30 shadow-2xl backdrop-blur-md">
           {!isLoggedIn ? (
             <>
               <button 
@@ -239,14 +143,11 @@ export default function App() {
         </div>
       )}
 
-      {/* 2. MAIN BODY CONTENT */}
+      {/* 2. BODY CONTENT */}
       <main className="max-w-md mx-auto w-full px-4 py-6 space-y-6 flex-1 pb-24">
-        
-        {/* LANDING PAGE (VISIBILITY WHEN NOT LOGGED IN) */}
         {!isLoggedIn ? (
+          /* HOMEPAGE / LANDING PAGE */
           <div className="space-y-8 pt-2">
-            
-            {/* HERO SECTION */}
             <div className="text-center space-y-4">
               <div className="inline-flex items-center gap-2 bg-blue-950/60 border border-blue-500/30 px-3.5 py-1.5 rounded-full text-[11px] font-bold text-cyan-400">
                 <Zap className="w-3.5 h-3.5 fill-cyan-400" />
@@ -261,7 +162,6 @@ export default function App() {
                 Get 12 real opted-in testers for your Android app effortlessly. Join developers worldwide, test each other's apps, and pass Play Console verification.
               </p>
 
-              {/* ACTION BUTTONS */}
               <div className="space-y-3 pt-2">
                 <button 
                   onClick={() => { setAuthMode('register'); setShowAuthModal(true); }}
@@ -280,7 +180,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* FULL FEATURES GRID (EXTENDED LIKE ORIGINAL SITE) */}
+            {/* FULL FEATURES GRID */}
             <div className="space-y-3 pt-4 border-t border-slate-900">
               <h3 className="text-xs font-black uppercase text-slate-500 tracking-wider text-center mb-4">Why Developers Choose Us</h3>
               
@@ -310,20 +210,16 @@ export default function App() {
                 </div>
               </div>
             </div>
-
           </div>
         ) : (
-
-          /* DASHBOARD (SHOWN AFTER LOGIN) */
+          /* LOGGED IN APP DASHBOARD */
           <div className="space-y-4">
-            
-            {/* Sponsored Banner Slot */}
             <div className="w-full h-20 bg-slate-900/60 border border-slate-800/80 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden">
               <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">SPONSORED BANNER</span>
               <div className="text-[10px] text-slate-600 font-mono mt-0.5">Ad Placement Banner (320x100)</div>
             </div>
 
-            {/* TAB 1: DAILY TEST */}
+            {/* TAB: DAILY TEST */}
             {activeTab === 'daily' && (
               <div className="space-y-3">
                 <div className="bg-gradient-to-r from-sky-400 to-blue-500 rounded-3xl p-4 text-white shadow-lg space-y-2">
@@ -333,23 +229,14 @@ export default function App() {
                       <Info className="w-3 h-3" /> +1d
                     </div>
                   </div>
-
                   <div className="space-y-1">
                     <div className="text-[11px] font-semibold text-blue-50 flex justify-between">
                       <span>Today's Progress</span>
                       <span className="font-mono">{completedTodayCount} / {apps.length} apps</span>
                     </div>
                     <div className="w-full bg-white/30 rounded-full h-1.5">
-                      <div 
-                        className="bg-white h-full rounded-full transition-all duration-300" 
-                        style={{ width: `${(completedTodayCount / apps.length) * 100}%` }}
-                      ></div>
+                      <div className="bg-white h-full rounded-full transition-all duration-300" style={{ width: `${(completedTodayCount / apps.length) * 100}%` }}></div>
                     </div>
-                    <p className="text-[10px] text-blue-100 font-medium pt-0.5">
-                      {apps.length - completedTodayCount > 0 
-                        ? `Just ${apps.length - completedTodayCount} more apps to go today` 
-                        : 'Daily goal completed! 🎉'}
-                    </p>
                   </div>
                 </div>
 
@@ -358,30 +245,20 @@ export default function App() {
                   {apps.map((app) => (
                     <div key={app.id} className="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm">
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-xl shrink-0">
-                          {app.icon}
-                        </div>
+                        <div className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-xl shrink-0">{app.icon}</div>
                         <div>
                           <h5 className="text-xs font-bold text-white">{app.name}</h5>
                           <span className="text-[10px] block font-medium mt-0.5">
-                            {app.tested_today ? (
-                              <span className="text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md">Tested Today</span>
-                            ) : (
-                              <span className="text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md">Pending verification</span>
-                            )}
+                            {app.tested_today ? <span className="text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md">Tested Today</span> : <span className="text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md">Pending verification</span>}
                           </span>
                         </div>
                       </div>
-
                       {app.tested_today ? (
                         <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
                           <Check className="w-4 h-4 stroke-[3]" />
                         </div>
                       ) : (
-                        <button 
-                          onClick={() => handlePerformRealTest(app)}
-                          className="bg-amber-100 hover:bg-amber-200 text-amber-950 font-black text-xs px-4 py-1.5 rounded-full transition shadow"
-                        >
+                        <button onClick={() => handlePerformRealTest(app)} className="bg-amber-100 hover:bg-amber-200 text-amber-950 font-black text-xs px-4 py-1.5 rounded-full transition shadow">
                           Open
                         </button>
                       )}
@@ -391,7 +268,7 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 2: EARN COINS (CLOSED TEST PRO) */}
+            {/* TAB: EARN COINS */}
             {activeTab === 'feed' && (
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
@@ -399,84 +276,52 @@ export default function App() {
                     <h3 className="text-sm font-black text-white">Closed Test Pro</h3>
                     <p className="text-[10px] text-slate-400">Test 12 apps - Get 12 testers</p>
                   </div>
-
                   <div className="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-full flex items-center gap-2 text-xs text-slate-400">
                     <Search className="w-3.5 h-3.5" />
-                    <input 
-                      type="text" 
-                      placeholder="Search" 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-transparent border-none outline-none text-[10px] text-white w-16"
-                    />
+                    <input type="text" placeholder="Search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent border-none outline-none text-[10px] text-white w-16" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  {filteredApps.map((app) => {
-                    const isFullyComplete = app.testers_count >= app.target_testers || app.tested_today;
-                    
-                    return (
-                      <div key={app.id} className="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-xl shrink-0 border border-slate-700">
-                            {app.icon}
-                          </div>
-                          <div className="min-w-0">
-                            <h5 className="text-xs font-bold text-white truncate">{app.name}</h5>
-                            <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
-                              <span className="truncate max-w-[85px]">{app.developer}</span>
-                              <span className="bg-slate-800 px-1.5 py-0.5 rounded text-[9px] font-bold text-cyan-400 flex items-center gap-1 border border-slate-700">
-                                👥 {app.testers_count}
-                              </span>
-                            </div>
+                  {filteredApps.map((app) => (
+                    <div key={app.id} className="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-xl shrink-0 border border-slate-700">{app.icon}</div>
+                        <div className="min-w-0">
+                          <h5 className="text-xs font-bold text-white truncate">{app.name}</h5>
+                          <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                            <span className="truncate max-w-[85px]">{app.developer}</span>
+                            <span className="bg-slate-800 px-1.5 py-0.5 rounded text-[9px] font-bold text-cyan-400 border border-slate-700">👥 {app.testers_count}</span>
                           </div>
                         </div>
-
-                        {isFullyComplete ? (
-                          <button disabled className="text-emerald-400 font-bold text-xs px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                            Tested
-                          </button>
-                        ) : (
-                          <button 
-                            onClick={() => handlePerformRealTest(app)}
-                            className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 font-bold text-xs px-4 py-1.5 rounded-full border border-cyan-500/30 transition shadow-sm"
-                          >
-                            Test
-                          </button>
-                        )}
                       </div>
-                    );
-                  })}
+                      {app.tested_today ? (
+                        <button disabled className="text-emerald-400 font-bold text-xs px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">Tested</button>
+                      ) : (
+                        <button onClick={() => handlePerformRealTest(app)} className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 font-bold text-xs px-4 py-1.5 rounded-full border border-cyan-500/30 transition shadow-sm">Test</button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* TAB 3: ADD APP */}
+            {/* TAB: ADD APP */}
             {activeTab === 'upload' && (
               <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-3">
                 <div className="border-b border-slate-800 pb-2">
                   <h3 className="text-sm font-bold text-white">Add App for 12 Testers</h3>
                   <p className="text-[11px] text-slate-400">Listing Cost: <span className="text-amber-400 font-bold">50 Coins</span></p>
                 </div>
-
                 <div className="bg-slate-950 p-3 rounded-2xl border border-blue-500/30 space-y-1.5">
                   <span className="text-[10px] font-bold text-cyan-400 block uppercase">Step 1: Copy Google Group Email</span>
                   <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-xl text-xs font-mono">
                     <span className="truncate flex-1 text-slate-300">12testers-community@googlegroups.com</span>
-                    <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText('12testers-community@googlegroups.com');
-                        setCopiedGroup(true);
-                        setTimeout(() => setCopiedGroup(false), 2000);
-                      }}
-                      className="bg-blue-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold"
-                    >
+                    <button onClick={() => { navigator.clipboard.writeText('12testers-community@googlegroups.com'); setCopiedGroup(true); setTimeout(() => setCopiedGroup(false), 2000); }} className="bg-blue-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold">
                       {copiedGroup ? 'Copied' : 'Copy'}
                     </button>
                   </div>
                 </div>
-
                 <form onSubmit={handlePublishApp} className="space-y-2.5">
                   <div>
                     <label className="text-[11px] font-bold text-slate-300">App Name</label>
@@ -494,15 +339,12 @@ export default function App() {
                     <label className="text-[11px] font-bold text-slate-300">Play Store Opt-in Link</label>
                     <input type="url" required placeholder="https://play.google.com/apps/testing/..." value={playLink} onChange={(e) => setPlayLink(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-100 mt-1 outline-none" />
                   </div>
-
-                  <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs mt-2 transition">
-                    Publish App (-50 Coins)
-                  </button>
+                  <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs mt-2 transition">Publish App (-50 Coins)</button>
                 </form>
               </div>
             )}
 
-            {/* TAB 4: ANALYTICS */}
+            {/* TAB: ANALYTICS */}
             {activeTab === 'analytics' && (
               <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-4">
                 <h3 className="text-sm font-bold text-white">Testing Analytics</h3>
@@ -519,29 +361,22 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 5: PROFILE */}
+            {/* TAB: PROFILE */}
             {activeTab === 'profile' && (
               <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-3">
                 <h3 className="text-sm font-bold text-white">Developer Account</h3>
                 <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-1 text-xs">
                   <p className="text-slate-400">Email: <span className="text-white font-bold">{email || 'dev@example.com'}</span></p>
                   <p className="text-slate-400">Current Balance: <span className="text-amber-400 font-bold">{coins} Coins</span></p>
-                  <button 
-                    onClick={() => setIsLoggedIn(false)}
-                    className="mt-3 w-full bg-red-600/20 text-red-400 border border-red-500/30 py-2 rounded-xl text-xs font-bold"
-                  >
-                    Logout Account
-                  </button>
+                  <button onClick={() => setIsLoggedIn(false)} className="mt-3 w-full bg-red-600/20 text-red-400 border border-red-500/30 py-2 rounded-xl text-xs font-bold">Logout Account</button>
                 </div>
               </div>
             )}
-
           </div>
         )}
-
       </main>
 
-      {/* 3. ALWAYS-PRESENT FOOTER (PRIVACY, TERMS, POLICY) */}
+      {/* 3. POLICY FOOTER */}
       <footer className="border-t border-slate-900 bg-[#05080f] py-6 px-4 text-center space-y-3 text-xs text-slate-500 mb-12">
         <div className="flex justify-center items-center gap-4 text-[11px] font-semibold text-slate-400">
           <button onClick={() => setPolicyModal('privacy')} className="hover:text-blue-400 transition">Privacy Policy</button>
@@ -553,155 +388,82 @@ export default function App() {
         <p className="text-[10px] text-slate-600">© 2026 12 Testers Hub. Designed for Google Play Console Testers.</p>
       </footer>
 
-      {/* 4. POP-UP LOGIN / REGISTER MODAL */}
+      {/* 4. AUTH MODAL */}
       {showAuthModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl relative">
-            
-            <button 
-              onClick={() => setShowAuthModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
+            <button onClick={() => setShowAuthModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white p-1"><X className="w-5 h-5" /></button>
             <div className="text-center space-y-1">
-              <h2 className="text-lg font-black text-white">
-                {authMode === 'login' ? 'Existing Member Login' : 'Create Account'}
-              </h2>
+              <h2 className="text-lg font-black text-white">{authMode === 'login' ? 'Existing Member Login' : 'Create Account'}</h2>
               <p className="text-xs text-slate-400">Pass Closed Testing in 14 Days</p>
             </div>
-
             <form onSubmit={handleAuthSubmit} className="space-y-3">
               <div>
                 <label className="text-[11px] font-bold text-slate-300">Email Address</label>
-                <input 
-                  type="email" 
-                  required 
-                  placeholder="dev@example.com" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 mt-1 outline-none focus:border-blue-500"
-                />
+                <input type="email" required placeholder="dev@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 mt-1 outline-none focus:border-blue-500" />
               </div>
-
               <div>
                 <label className="text-[11px] font-bold text-slate-300">Password</label>
-                <input 
-                  type="password" 
-                  required 
-                  placeholder="••••••••" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 mt-1 outline-none focus:border-blue-500"
-                />
+                <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 mt-1 outline-none focus:border-blue-500" />
               </div>
-
-              <button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg transition"
-              >
+              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg transition">
                 {authMode === 'login' ? 'Login to Dashboard' : 'Register & Claim 160 Coins'}
               </button>
             </form>
-
             <div className="text-center border-t border-slate-800 pt-3">
-              <button 
-                onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
-                className="text-xs text-cyan-400 hover:underline font-semibold"
-              >
+              <button onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} className="text-xs text-cyan-400 hover:underline font-semibold">
                 {authMode === 'login' ? "Don't have an account? Register" : 'Already have an account? Login'}
               </button>
             </div>
-
           </div>
         </div>
       )}
 
-      {/* 5. POLICY / TERMS POP-UP MODAL */}
+      {/* 5. POLICY MODAL */}
       {policyModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-3 max-h-[80vh] overflow-y-auto relative text-xs">
-            <button 
-              onClick={() => setPolicyModal(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
+            <button onClick={() => setPolicyModal(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
             <h3 className="text-sm font-bold text-white uppercase border-b border-slate-800 pb-2">
               {policyModal === 'privacy' && 'Privacy Policy'}
               {policyModal === 'terms' && 'Terms of Service'}
               {policyModal === 'refund' && 'Refund Policy'}
             </h3>
-
             <div className="text-slate-400 space-y-2 leading-relaxed">
-              {policyModal === 'privacy' && (
-                <p>We respect your privacy. All user emails and Play Store opt-in credentials provided to 12 Testers are strictly used for Android app verification and reciprocal testing purposes only.</p>
-              )}
-              {policyModal === 'terms' && (
-                <p>By using 12 Testers, you agree to keep tested apps installed on your device for at least 14 days and submit honest feedback as required by Google Play Console policies.</p>
-              )}
-              {policyModal === 'refund' && (
-                <p>Coins earned through reciprocal app testing are virtual assets used solely to list apps within the platform ecosystem and hold zero real-world cash refund value.</p>
-              )}
+              {policyModal === 'privacy' && <p>We respect your privacy. All user emails and Play Store opt-in credentials provided to 12 Testers are strictly used for Android app verification and reciprocal testing purposes only.</p>}
+              {policyModal === 'terms' && <p>By using 12 Testers, you agree to keep tested apps installed on your device for at least 14 days and submit honest feedback as required by Google Play Console policies.</p>}
+              {policyModal === 'refund' && <p>Coins earned through reciprocal app testing are virtual assets used solely to list apps within the platform ecosystem and hold zero real-world cash refund value.</p>}
             </div>
-
-            <button 
-              onClick={() => setPolicyModal(null)}
-              className="w-full bg-slate-800 text-white font-bold py-2 rounded-xl text-xs mt-3"
-            >
-              Close
-            </button>
+            <button onClick={() => setPolicyModal(null)} className="w-full bg-slate-800 text-white font-bold py-2 rounded-xl text-xs mt-3">Close</button>
           </div>
         </div>
       )}
 
-      {/* 6. BOTTOM NAVIGATION MENU BAR (SHOWN WHEN LOGGED IN) */}
+      {/* 6. BOTTOM NAV (LOGGED IN ONLY) */}
       {isLoggedIn && (
         <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-800 z-40 px-2 py-2 flex justify-around items-center backdrop-blur-lg">
-          <button 
-            onClick={() => setActiveTab('feed')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'feed' ? 'text-cyan-400' : 'text-slate-400'}`}
-          >
+          <button onClick={() => setActiveTab('feed')} className={`flex flex-col items-center gap-1 ${activeTab === 'feed' ? 'text-cyan-400' : 'text-slate-400'}`}>
             <LayoutGrid className="w-5 h-5" />
             <span className="text-[9px] font-bold">Earn Coins</span>
           </button>
-
-          <button 
-            onClick={() => setActiveTab('daily')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'daily' ? 'text-cyan-400' : 'text-slate-400'}`}
-          >
+          <button onClick={() => setActiveTab('daily')} className={`flex flex-col items-center gap-1 ${activeTab === 'daily' ? 'text-cyan-400' : 'text-slate-400'}`}>
             <Calendar className="w-5 h-5" />
             <span className="text-[9px] font-bold">Daily Test</span>
           </button>
-
-          <button 
-            onClick={() => setActiveTab('upload')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'upload' ? 'text-cyan-400' : 'text-slate-400'}`}
-          >
+          <button onClick={() => setActiveTab('upload')} className={`flex flex-col items-center gap-1 ${activeTab === 'upload' ? 'text-cyan-400' : 'text-slate-400'}`}>
             <PlusCircle className="w-5 h-5" />
             <span className="text-[9px] font-bold">Add App</span>
           </button>
-
-          <button 
-            onClick={() => setActiveTab('analytics')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'analytics' ? 'text-cyan-400' : 'text-slate-400'}`}
-          >
+          <button onClick={() => setActiveTab('analytics')} className={`flex flex-col items-center gap-1 ${activeTab === 'analytics' ? 'text-cyan-400' : 'text-slate-400'}`}>
             <BarChart3 className="w-5 h-5" />
             <span className="text-[9px] font-bold">Analytics</span>
           </button>
-
-          <button 
-            onClick={() => setActiveTab('profile')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'profile' ? 'text-cyan-400' : 'text-slate-400'}`}
-          >
+          <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center gap-1 ${activeTab === 'profile' ? 'text-cyan-400' : 'text-slate-400'}`}>
             <User className="w-5 h-5" />
             <span className="text-[9px] font-bold">Profile</span>
           </button>
         </div>
       )}
-
     </div>
   );
 }
