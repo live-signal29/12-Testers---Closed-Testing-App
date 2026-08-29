@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   ShieldCheck, Award, PlusCircle, 
   BarChart3, User, LayoutGrid, Calendar, Check,
-  Search, Info, ArrowRight, Menu, X, Users, Smartphone, Zap
+  Search, Info, ArrowRight, Menu, X, Users, Smartphone, Zap,
+  Clock, Shield, RefreshCw, FileText, Lock, Globe, ExternalLink
 } from 'lucide-react';
 
 export default function App() {
@@ -10,6 +11,9 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState('register'); // 'register' or 'login'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Policy Modals State
+  const [policyModal, setPolicyModal] = useState(null); // 'privacy', 'terms', 'refund'
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,7 +23,7 @@ export default function App() {
   const [copiedGroup, setCopiedGroup] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Apps Data
+  // Apps State
   const [apps, setApps] = useState([
     {
       id: 1,
@@ -164,8 +168,8 @@ export default function App() {
     <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col font-sans antialiased">
       
       {/* 1. TOP HEADER MENU BAR */}
-      <header className="border-b border-slate-800/80 bg-[#070b14]/90 sticky top-0 z-50 px-4 py-3.5 flex justify-between items-center backdrop-blur-md">
-        <div className="flex items-center gap-2.5">
+      <header className="border-b border-slate-800/80 bg-[#070b14]/90 sticky top-0 z-40 px-4 py-3.5 flex justify-between items-center backdrop-blur-md">
+        <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setIsLoggedIn(false)}>
           <div className="bg-blue-600 p-2 rounded-xl text-white shadow-[0_0_12px_rgba(37,99,235,0.5)]">
             <ShieldCheck className="w-5 h-5" />
           </div>
@@ -177,7 +181,7 @@ export default function App() {
 
         {/* Dynamic Header Controls */}
         <div className="flex items-center gap-2">
-          {isLoggedIn ? (
+          {isLoggedIn && (
             <div className="bg-slate-950 border border-amber-500/40 px-3 py-1.5 rounded-2xl flex items-center gap-2 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
               <Award className="w-4 h-4 text-amber-400 animate-pulse" />
               <div className="flex flex-col text-right leading-none">
@@ -185,32 +189,53 @@ export default function App() {
                 <span className="text-xs font-black text-amber-300">{coins} Coins</span>
               </div>
             </div>
-          ) : (
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-              className="p-1.5 text-slate-300 hover:text-white"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
           )}
+          
+          {/* THREE LINES HAMBURGER MENU */}
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+            className="p-2 text-slate-300 hover:text-white bg-slate-900 border border-slate-800 rounded-xl transition"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
       </header>
 
-      {/* MOBILE MENU DROPDOWN (UNTIL LOGGED IN) */}
-      {!isLoggedIn && mobileMenuOpen && (
-        <div className="bg-slate-900 border-b border-slate-800 px-4 py-3 space-y-2 text-xs font-semibold z-40">
-          <button 
-            onClick={() => { setAuthMode('login'); setShowAuthModal(true); setMobileMenuOpen(false); }}
-            className="w-full text-left py-2 text-slate-200 hover:text-cyan-400"
-          >
-            Existing Member Login
-          </button>
-          <button 
-            onClick={() => { setAuthMode('register'); setShowAuthModal(true); setMobileMenuOpen(false); }}
-            className="w-full text-left py-2 text-blue-400 hover:text-blue-300"
-          >
-            Register & Get 12 Testers
-          </button>
+      {/* THREE LINES SLIDE-DOWN DRAWER MENU */}
+      {mobileMenuOpen && (
+        <div className="bg-slate-900 border-b border-slate-800 px-4 py-4 space-y-3 text-xs font-semibold sticky top-[57px] z-30 shadow-2xl backdrop-blur-md">
+          {!isLoggedIn ? (
+            <>
+              <button 
+                onClick={() => { setAuthMode('login'); setShowAuthModal(true); setMobileMenuOpen(false); }}
+                className="w-full text-left py-2.5 px-3 bg-slate-950 rounded-xl text-slate-200 hover:text-cyan-400 border border-slate-800 flex justify-between items-center"
+              >
+                <span>Existing Member Login</span>
+                <ArrowRight className="w-4 h-4 text-slate-500" />
+              </button>
+              <button 
+                onClick={() => { setAuthMode('register'); setShowAuthModal(true); setMobileMenuOpen(false); }}
+                className="w-full text-left py-2.5 px-3 bg-blue-600 rounded-xl text-white font-bold flex justify-between items-center shadow-md"
+              >
+                <span>Register & Get 12 Testers</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
+            <button 
+              onClick={() => { setIsLoggedIn(false); setMobileMenuOpen(false); }}
+              className="w-full text-left py-2.5 px-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl font-bold flex justify-between items-center"
+            >
+              <span>Logout Account</span>
+              <X className="w-4 h-4" />
+            </button>
+          )}
+
+          <div className="pt-2 border-t border-slate-800 flex flex-col gap-2 text-[11px] text-slate-400">
+            <button onClick={() => { setPolicyModal('privacy'); setMobileMenuOpen(false); }} className="text-left hover:text-white">Privacy Policy</button>
+            <button onClick={() => { setPolicyModal('terms'); setMobileMenuOpen(false); }} className="text-left hover:text-white font-mono">Terms & Conditions</button>
+            <button onClick={() => { setPolicyModal('refund'); setMobileMenuOpen(false); }} className="text-left hover:text-white">Refund Policy</button>
+          </div>
         </div>
       )}
 
@@ -219,7 +244,7 @@ export default function App() {
         
         {/* LANDING PAGE (VISIBILITY WHEN NOT LOGGED IN) */}
         {!isLoggedIn ? (
-          <div className="space-y-8 pt-4">
+          <div className="space-y-8 pt-2">
             
             {/* HERO SECTION */}
             <div className="text-center space-y-4">
@@ -255,17 +280,34 @@ export default function App() {
               </div>
             </div>
 
-            {/* FEATURE CARDS */}
-            <div className="grid grid-cols-2 gap-3 pt-4">
-              <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-2xl space-y-1">
-                <Users className="w-5 h-5 text-blue-400 mb-1" />
-                <h4 className="text-xs font-bold text-white">Guaranteed Testers</h4>
-                <p className="text-[10px] text-slate-400">Real developers testing your app daily.</p>
-              </div>
-              <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-2xl space-y-1">
-                <Smartphone className="w-5 h-5 text-cyan-400 mb-1" />
-                <h4 className="text-xs font-bold text-white">Play Console Ready</h4>
-                <p className="text-[10px] text-slate-400">Full 14-day tracking & testing history.</p>
+            {/* FULL FEATURES GRID (EXTENDED LIKE ORIGINAL SITE) */}
+            <div className="space-y-3 pt-4 border-t border-slate-900">
+              <h3 className="text-xs font-black uppercase text-slate-500 tracking-wider text-center mb-4">Why Developers Choose Us</h3>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-2xl space-y-1">
+                  <Users className="w-5 h-5 text-blue-400 mb-1" />
+                  <h4 className="text-xs font-bold text-white">Guaranteed Testers</h4>
+                  <p className="text-[10px] text-slate-400">Real developers testing your app daily.</p>
+                </div>
+                
+                <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-2xl space-y-1">
+                  <Smartphone className="w-5 h-5 text-cyan-400 mb-1" />
+                  <h4 className="text-xs font-bold text-white">Play Console Ready</h4>
+                  <p className="text-[10px] text-slate-400">Full 14-day tracking & testing history.</p>
+                </div>
+
+                <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-2xl space-y-1">
+                  <Clock className="w-5 h-5 text-amber-400 mb-1" />
+                  <h4 className="text-xs font-bold text-white">Continuous 14 Days</h4>
+                  <p className="text-[10px] text-slate-400">Automated daily test reminders & verification.</p>
+                </div>
+
+                <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-2xl space-y-1">
+                  <Shield className="w-5 h-5 text-emerald-400 mb-1" />
+                  <h4 className="text-xs font-bold text-white">100% Safe Exchange</h4>
+                  <p className="text-[10px] text-slate-400">Google Group opt-in compliance guaranteed.</p>
+                </div>
               </div>
             </div>
 
@@ -499,7 +541,19 @@ export default function App() {
 
       </main>
 
-      {/* 3. POP-UP LOGIN / REGISTER MODAL */}
+      {/* 3. ALWAYS-PRESENT FOOTER (PRIVACY, TERMS, POLICY) */}
+      <footer className="border-t border-slate-900 bg-[#05080f] py-6 px-4 text-center space-y-3 text-xs text-slate-500 mb-12">
+        <div className="flex justify-center items-center gap-4 text-[11px] font-semibold text-slate-400">
+          <button onClick={() => setPolicyModal('privacy')} className="hover:text-blue-400 transition">Privacy Policy</button>
+          <span>•</span>
+          <button onClick={() => setPolicyModal('terms')} className="hover:text-blue-400 transition">Terms of Service</button>
+          <span>•</span>
+          <button onClick={() => setPolicyModal('refund')} className="hover:text-blue-400 transition">Refund Policy</button>
+        </div>
+        <p className="text-[10px] text-slate-600">© 2026 12 Testers Hub. Designed for Google Play Console Testers.</p>
+      </footer>
+
+      {/* 4. POP-UP LOGIN / REGISTER MODAL */}
       {showAuthModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl relative">
@@ -564,7 +618,46 @@ export default function App() {
         </div>
       )}
 
-      {/* 4. BOTTOM NAVIGATION MENU BAR (SHOWN WHEN LOGGED IN) */}
+      {/* 5. POLICY / TERMS POP-UP MODAL */}
+      {policyModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-3 max-h-[80vh] overflow-y-auto relative text-xs">
+            <button 
+              onClick={() => setPolicyModal(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-sm font-bold text-white uppercase border-b border-slate-800 pb-2">
+              {policyModal === 'privacy' && 'Privacy Policy'}
+              {policyModal === 'terms' && 'Terms of Service'}
+              {policyModal === 'refund' && 'Refund Policy'}
+            </h3>
+
+            <div className="text-slate-400 space-y-2 leading-relaxed">
+              {policyModal === 'privacy' && (
+                <p>We respect your privacy. All user emails and Play Store opt-in credentials provided to 12 Testers are strictly used for Android app verification and reciprocal testing purposes only.</p>
+              )}
+              {policyModal === 'terms' && (
+                <p>By using 12 Testers, you agree to keep tested apps installed on your device for at least 14 days and submit honest feedback as required by Google Play Console policies.</p>
+              )}
+              {policyModal === 'refund' && (
+                <p>Coins earned through reciprocal app testing are virtual assets used solely to list apps within the platform ecosystem and hold zero real-world cash refund value.</p>
+              )}
+            </div>
+
+            <button 
+              onClick={() => setPolicyModal(null)}
+              className="w-full bg-slate-800 text-white font-bold py-2 rounded-xl text-xs mt-3"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 6. BOTTOM NAVIGATION MENU BAR (SHOWN WHEN LOGGED IN) */}
       {isLoggedIn && (
         <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-800 z-40 px-2 py-2 flex justify-around items-center backdrop-blur-lg">
           <button 
